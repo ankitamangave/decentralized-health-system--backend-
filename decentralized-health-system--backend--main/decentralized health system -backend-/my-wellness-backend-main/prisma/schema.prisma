@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// patient -> checkedBy <- Doctor --many to many 
+model Patient {
+  id          String    @id
+  firstName   String
+  middleName  String
+  lastName    String
+  email       String
+  password    String
+  contactNo   String[]
+  dateOfBirth DateTime
+  age         Int
+  gender      String
+  address     String
+  isAlive     Boolean   @default(true)
+  records     Records[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+
+  @@unique([firstName, middleName, lastName, email, contactNo])
+}
+
+model Doctor {
+  id            String    @id
+  firstName     String
+  middleName    String
+  lastName      String
+  email         String    @unique
+  password      String
+  contactNo     String[]
+  qualification String
+  address       String
+  gender        String
+  age           Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now())
+  records       Records[]
+}
+
+// Patient -> visits <- Hospital -- many to many
+model Hospital {
+  id        String    @id
+  name      String
+  email     String    @unique
+  password  String
+  address   String
+  contactNo String[]
+  type      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
+  records   Records[]
+}
+
+// patient has records -- one to many, hospital has records
+model Records {
+  id          String   @id @default(cuid())
+  medicines   String[]
+  diagnosis   String
+  description String
+  doctorId    String
+  hospitalId  String
+  patientId   String
+  createdAt   DateTime @default(now())
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  doctor      Doctor   @relation(fields: [doctorId], references: [id])
+  hospital    Hospital @relation(fields: [hospitalId], references: [id])
+}
+
+// a seprate user 
+model Admin {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  password   String
+  firstName  String
+  middleName String
+  lastName   String
+  contactNo  String[]
+}
